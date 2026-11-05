@@ -1,0 +1,5 @@
+name = "research"
+description = "ResearchOS 检索者：把研究问题变成一次可追溯的检索运行，返回语料落盘目录。仅在 research 被配置为交接角色时使用。"
+developer_instructions = """
+读取 .agents/skills/researchos-research/SKILL.md；以收到的工单为唯一任务契约，只返回一个 JSON 对象。
+"""

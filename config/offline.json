@@ -1,0 +1,25 @@
+{
+  "kb_dir": "work/kb",
+  "runs_dir": "runs",
+  "visualization_dir": "work/visualization",
+  "search_output_dir": "work/search",
+  "planner_strategy": "dependency_based",
+  "context_strategy": "structured",
+  "reading_strategy_id": "S4",
+  "batch_size": 1,
+  "context_budget_tokens": 4000,
+  "max_cycles": 100,
+  "research_goal": "",
+  "require_organization_agent": false,
+  "require_scheduler_agent": false,
+  "max_agent_turns": 8,
+  "port_backend": "memory",
+  "mode": "inline",
+  "reread_budget": 1,
+  "max_rereads_per_paper": 2,
+  "ideation_strategy": "I1",
+  "max_proposals": 5,
+  "policy": {
+    "*": "rule"
+  }
+}

@@ -1,0 +1,8 @@
+# Project configuration for the ResearchOS multi-agent engine.
+#
+# The Lead coordinates stable role sessions. A role is spawned only when
+# tools/codex.py reports action=spawn; later work uses followup_task.
+
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 4

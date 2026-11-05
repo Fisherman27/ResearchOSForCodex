@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://researchos.local/paperread/schemas/reading_result_experiment.schema.json",
+  "title": "ReadingResult (isolated experiment intermediate format)",
+  "description": "首轮独立阅读策略实验使用的最小统一中间格式，版本 exp-1.0。本 Schema 就是发送给被测模型的 JSON 契约（EXPERIMENT_GUIDE_1010 §7.2），刻意保持最小、字段含义跨组恒定。它不是生产契约，不冒充 PaperOrganization 现有 validator 已支持该结构；正式 Schema 落地后再做版本迁移。注意原文中 string_or_null 的简写在此落实为 type: [\"string\",\"null\"]。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "paper_id",
+    "gist",
+    "research_problem",
+    "contribution",
+    "method",
+    "core_claims",
+    "key_results",
+    "assumptions",
+    "limitations",
+    "unresolved_questions"
+  ],
+  "properties": {
+    "paper_id": {
+      "type": "string",
+      "description": "目标论文标识，由任务给定，不得自行编造。"
+    },
+    "gist": {
+      "type": "string",
+      "description": "一句话概述这篇论文做了什么。"
+    },
+    "research_problem": {
+      "type": "string",
+      "description": "论文试图解决的问题（起点）。"
+    },
+    "contribution": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "增量贡献（与 research_problem 区分）。"
+    },
+    "method": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["what", "design_rationale", "mechanism"],
+      "properties": {
+        "what": { "type": "string" },
+        "design_rationale": { "type": "string" },
+        "mechanism": {
+          "type": "string",
+          "description": "方法机制的连贯说明：组件、数据流、关键公式或理论对象如何共同起作用。本阶段为字符串，生产 Schema 中为结构化对象。"
+        }
+      }
+    },
+    "core_claims": {
+      "type": "array",
+      "description": "核心主张。每条须给出支持方式、适用范围与原文定位。",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["claim", "support", "scope", "paper_evidence_locator", "source_type"],
+        "properties": {
+          "claim": { "type": "string" },
+          "support": {
+            "type": "string",
+            "description": "论文中何种证明/实验/表格/图表/论证支持它，以及在什么条件下。"
+          },
+          "scope": {
+            "type": "string",
+            "description": "该主张成立的对象、条件或设置范围。"
+          },
+          "paper_evidence_locator": {
+            "type": ["string", "null"],
+            "description": "软定位：页码 + 短引文 / 公式号 / 图表号。无法可靠定位时为 null，禁止编造。"
+          },
+          "source_type": {
+            "type": "string",
+            "enum": ["author_claim", "derived_inference", "uncertain"],
+            "description": "作者主张 / 模型推断 / 无法确认。"
+          }
+        }
+      }
+    },
+    "key_results": {
+      "type": "array",
+      "description": "关键结果。本阶段为字符串数组；生产 Schema 中可含 metric/baseline/scope 等比较条件。",
+      "items": { "type": "string" }
+    },
+    "assumptions": {
+      "type": "array",
+      "description": "显式与隐含假设。本阶段为字符串数组，隐含假设应写明这是推断。",
+      "items": { "type": "string" }
+    },
+    "limitations": {
+      "type": "array",
+      "description": "局限。本阶段为字符串数组，作者承认与读者识别需在文本中区分。",
+      "items": { "type": "string" }
+    },
+    "unresolved_questions": {
+      "type": "array",
+      "description": "理解中尚未解决或无法从本篇确认的问题。缺信息时如实列出，不编造填补。",
+      "items": { "type": "string" }
+    }
+  }
+}

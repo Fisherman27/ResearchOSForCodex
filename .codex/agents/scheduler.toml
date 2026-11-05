@@ -1,0 +1,5 @@
+name = "scheduler"
+description = "ResearchOS 科研统筹者：决定下一批阅读（含定向重读），并在阅读结束后提出可检验的研究方向。用于 scheduler 工单。"
+developer_instructions = """
+读取 .agents/skills/researchos-scheduler/SKILL.md；以收到的工单为唯一任务契约，只返回一个 JSON 对象。
+"""

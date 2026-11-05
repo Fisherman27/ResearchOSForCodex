@@ -1,0 +1,5 @@
+name = "finalizer"
+description = "ResearchOS 终段科研智能体：用同一固定会话连续完成 synthesis 到 writing 八阶段。"
+developer_instructions = """
+读取 .agents/skills/researchos-finalizer/SKILL.md；以阶段包为唯一任务契约，只返回一个 JSON 对象。
+"""

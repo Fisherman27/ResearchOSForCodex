@@ -1,0 +1,33 @@
+{
+  "kb_dir": "kb",
+  "runs_dir": "runs",
+  "visualization_dir": "viz",
+  "search_output_dir": "work/search",
+  "planner_strategy": "dependency_based",
+  "context_strategy": "structured",
+  "reading_strategy_id": "S4",
+  "batch_size": 1,
+  "context_budget_tokens": 6000,
+  "max_cycles": 40,
+  "research_goal": "",
+  "require_organization_agent": false,
+  "require_scheduler_agent": false,
+  "max_agent_turns": 8,
+  "port_backend": "bundle",
+  "mode": "handoff",
+  "handoff_agents": [
+    "research",
+    "scheduler",
+    "read",
+    "organization.curator",
+    "organization.relation_reviewer"
+  ],
+  "policy": {
+    "*": "handoff"
+  },
+  "reread_budget": 1,
+  "max_rereads_per_paper": 2,
+  "ideation_strategy": "I1",
+  "max_proposals": 5,
+  "layout": "per_run"
+}

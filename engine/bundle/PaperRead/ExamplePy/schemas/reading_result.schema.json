@@ -1,0 +1,566 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://researchos.local/paperread/schemas/reading_result.schema.json",
+  "title": "ReadingResult (production contract)",
+  "description": "PaperRead 生产结果契约，版本 2.0-draft。字段名与 PaperOrganization 权威 Schema 的 understanding 段及 SQLite 各表逐字一致（PLAN1009 §5、PLAN1008 §3.1）。新增字段在 Organization validator 升级前不得静默丢弃：先按 schema_version 分流，再迁移。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "paper_id",
+    "reading_depth",
+    "generated_by",
+    "generated_at",
+    "gist",
+    "research_problem",
+    "contribution",
+    "method",
+    "core_claims",
+    "key_results",
+    "assumptions",
+    "limitations",
+    "method_family",
+    "tags",
+    "claim_relations",
+    "method_evolution",
+    "understanding_quality",
+    "completeness"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "2.0-draft",
+      "description": "Schema 版本。升级前旧 validator 不支持的新字段必须报错而非丢弃。"
+    },
+    "paper_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "稳定论文主键，如 arxiv:1809.03057。"
+    },
+    "reading_depth": {
+      "type": "string",
+      "enum": ["unread", "first_pass", "second_pass", "third_pass"],
+      "description": "阅读覆盖进度（PLAN1008 §3.3）。只记录覆盖范围，不代表理解质量。"
+    },
+    "generated_by": {
+      "type": "string",
+      "minLength": 1,
+      "description": "生成者标识，如 paperread-v2 / paperread-v2+mechanism_reconstruction。"
+    },
+    "generated_at": {
+      "type": "string",
+      "minLength": 1,
+      "description": "生成日期或时间戳（ISO 8601 优先）。"
+    },
+    "reading_task_id": {
+      "type": ["string", "null"],
+      "description": "来源 ReadingTask 的 task_id。隔离实验中为 null。"
+    },
+    "context_snapshot": {
+      "type": ["string", "null"],
+      "description": "知识快照标识，对应 ReadingTask.knowledge_snapshot。无上下文时为 null。"
+    },
+    "screening": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verdict", "reason", "basis"],
+      "properties": {
+        "verdict": {"type": "string", "enum": ["valuable", "uncertain", "exclude"]},
+        "reason": {"type": "string", "minLength": 1},
+        "basis": {"type": "string", "enum": ["title_abstract", "metadata", "fulltext_preview", "fulltext", "citation_context"]},
+        "recommended_depth": {"type": "string", "enum": ["summary", "skim", "deep"]}
+      },
+      "description": "分层阅读初筛。exclude 是价值判断，不等于删除论文。"
+    },
+
+    "gist": {
+      "type": "string",
+      "description": "一句话概述：这篇论文做了什么。"
+    },
+    "research_problem": {
+      "type": "string",
+      "description": "要解决的瓶颈（起点），与 contribution 区分。"
+    },
+    "contribution": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "增量贡献（与 research_problem 区分）。"
+    },
+
+    "method": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["what", "design_rationale", "mechanism"],
+      "properties": {
+        "what": { "type": "string", "description": "做了什么。" },
+        "design_rationale": { "type": "string", "description": "为什么这么做（设计动机）。" },
+        "mechanism": { "$ref": "#/$defs/mechanism" }
+      }
+    },
+
+    "core_claims": {
+      "type": "array",
+      "description": "核心主张及其论证结构（PLAN1009 §5.3）。",
+      "items": { "$ref": "#/$defs/coreClaim" }
+    },
+    "key_results": {
+      "type": "array",
+      "description": "关键结果及其比较条件（PLAN1009 §5.4）。",
+      "items": { "$ref": "#/$defs/keyResult" }
+    },
+    "assumptions": {
+      "type": "array",
+      "description": "显式与隐含假设（PLAN1008 §3.1、PLAN1009 §5.4）。",
+      "items": { "$ref": "#/$defs/assumption" }
+    },
+    "limitations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["acknowledged", "unacknowledged"],
+      "properties": {
+        "acknowledged": {
+          "type": "array",
+          "description": "作者自己承认的局限。",
+          "items": { "$ref": "#/$defs/limitationItem" }
+        },
+        "unacknowledged": {
+          "type": "array",
+          "description": "读者识别、作者未承认的局限。未验证的局限是研究疑问，不是已有事实。",
+          "items": { "$ref": "#/$defs/limitationItem" }
+        }
+      }
+    },
+
+    "method_family": { "type": "string", "description": "方法族归类。" },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "方向标签。"
+    },
+
+    "claim_relations": {
+      "type": "array",
+      "description": "论点间关系。端点用 #n / <paper_id>#n 表达意图，claim_id 由落库方生成。",
+      "items": { "$ref": "#/$defs/claimRelation" }
+    },
+    "method_evolution": {
+      "type": "array",
+      "description": "跨篇方法演化（PLAN1009 §5.5）。是对 paper_relations.axis 的细粒度补充，不取代论文图/论点图。",
+      "items": { "$ref": "#/$defs/methodEvolution" }
+    },
+
+    "document_sha256": {
+      "type": ["string", "null"],
+      "description": "本次精读所依据全文的 SHA-256；材料无法散列时为 null。"
+    },
+    "reading_basis": {
+      "type": "string",
+      "enum": ["title_abstract", "fulltext", "fulltext_and_visuals"],
+      "description": "明确本次判断实际核查到的材料范围，防止把摘要阅读冒充全文精读。"
+    },
+    "evidence_quotes": {
+      "type": "array",
+      "description": "逐页核验的关键原文。quote 必须来自对应页；没有逐页材料时保持空数组。",
+      "items": { "$ref": "#/$defs/evidenceQuote" }
+    },
+    "critical_appraisal": { "$ref": "#/$defs/criticalAppraisal" },
+    "understanding_quality": { "$ref": "#/$defs/understandingQuality" },
+    "completeness": { "$ref": "#/$defs/completeness" }
+  },
+
+  "$defs": {
+    "evidenceList": {
+      "type": "array",
+      "description": "证据锚点。协同模式用 span_id / media_id；无法定位时用 [null] 并保持 not_checked/inconclusive，不得伪造 ID。**不得**在此放页码/引文等软定位——那属于 soft_locator。",
+      "items": { "type": ["string", "null"] }
+    },
+    "sourceType": {
+      "type": "string",
+      "enum": ["paper_assertion", "reader_inference", "cross_paper_synthesis"],
+      "description": "作者主张 / 读者推断 / 跨篇综合。跨篇综合不得强加给单篇论文。"
+    },
+    "verificationStatus": {
+      "type": "string",
+      "enum": ["not_checked", "supported", "partially_supported", "contradicted", "inconclusive"],
+      "description": "已审查的给定证据是否足以支持所述范围的主张，不是数学意义的真值认证。"
+    },
+    "evidenceType": {
+      "type": "string",
+      "enum": ["theoretical", "empirical", "ablation", "cited"],
+      "description": "证据性质。cited 只表示作者引用了别人，不等于本论文证明了。"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "结论成立的对象/条件/任务/数据设置。局部实验现象不得写成无条件普遍定律。",
+      "properties": {
+        "conditions": { "type": "array", "items": { "type": "string" } },
+        "objects": { "type": "array", "items": { "type": "string" } },
+        "settings": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "mechanism": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inputs",
+        "outputs",
+        "components",
+        "key_equations",
+        "algorithm_steps",
+        "dependencies",
+        "differences_from_prior_work"
+      ],
+      "description": "支持方法重建的结构化机制（PLAN1009 §5.2）。优先保存真实的关键关系，不机械提取每个变量。",
+      "properties": {
+        "notes": {
+          "type": "string",
+          "description": "结构性字段之外的方法机制连贯说明；当只产出自由文本机制说明（如隔离实验中间格式）时，原文保留在此，避免信息丢失。"
+        },
+        "inputs": { "type": "array", "items": { "type": "string" } },
+        "outputs": { "type": "array", "items": { "type": "string" } },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "role"],
+            "properties": {
+              "name": { "type": "string" },
+              "role": { "type": "string" },
+              "inputs": { "type": "array", "items": { "type": "string" } },
+              "outputs": { "type": "array", "items": { "type": "string" } },
+              "design_reason": { "type": "string" },
+              "evidence": { "$ref": "#/$defs/evidenceList" }
+            }
+          }
+        },
+        "key_equations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["expression", "interpretation", "evidence"],
+            "properties": {
+              "expression": { "type": "string", "description": "原公式（LaTeX 或纯文本）。" },
+              "variables": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["symbol", "meaning"],
+                  "properties": {
+                    "symbol": { "type": "string" },
+                    "meaning": { "type": "string" }
+                  }
+                }
+              },
+              "conditions": { "type": "array", "items": { "type": "string" } },
+              "interpretation": { "type": "string", "description": "语义解释：这个公式在做什么。" },
+              "evidence": { "$ref": "#/$defs/evidenceList" }
+            }
+          }
+        },
+        "algorithm_steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["step", "description"],
+            "properties": {
+              "step": { "type": "integer", "minimum": 1 },
+              "description": { "type": "string" },
+              "evidence": { "$ref": "#/$defs/evidenceList" }
+            }
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "kind"],
+            "properties": {
+              "name": { "type": "string" },
+              "kind": {
+                "type": "string",
+                "enum": ["concept", "algorithm", "theorem", "dataset", "tool", "paper"]
+              },
+              "source_paper": { "type": ["string", "null"] },
+              "evidence": { "$ref": "#/$defs/evidenceList" }
+            }
+          }
+        },
+        "differences_from_prior_work": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["aspect", "prior", "current", "reason"],
+            "properties": {
+              "aspect": { "type": "string" },
+              "prior": { "type": "string" },
+              "current": { "type": "string" },
+              "reason": { "type": "string" },
+              "evidence": { "$ref": "#/$defs/evidenceList" }
+            }
+          }
+        }
+      }
+    },
+
+    "coreClaim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "evidence", "evidence_type", "source_type", "verification_status"],
+      "properties": {
+        "text": { "type": "string" },
+        "evidence": { "$ref": "#/$defs/evidenceList" },
+        "evidence_type": { "$ref": "#/$defs/evidenceType" },
+        "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "scope": { "$ref": "#/$defs/scope" },
+        "premises": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "所依赖的前提，可关联 assumptions、概念或其他 claims。"
+        },
+        "reasoning": {
+          "type": "string",
+          "description": "为何能够由前提/证据支持结论。"
+        },
+        "source_type": { "$ref": "#/$defs/sourceType" },
+        "verification_status": { "$ref": "#/$defs/verificationStatus" },
+        "verification_notes": { "type": ["string", "null"] },
+        "soft_locator": {
+          "type": ["string", "null"],
+          "description": "软定位（页码 + 短引文 / 公式号 / 图表号）。用于尚无 Organization 锚点的阶段；**不得**写入 evidence，软定位不等于强语义支持。"
+        }
+      }
+    },
+
+    "keyResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "evidence", "evidence_type"],
+      "properties": {
+        "text": { "type": "string" },
+        "evidence": { "$ref": "#/$defs/evidenceList" },
+        "evidence_type": { "$ref": "#/$defs/evidenceType" },
+        "metric": { "type": ["string", "null"], "description": "指标名称。" },
+        "dataset_or_setting": { "type": ["string", "null"], "description": "在什么数据集/设置下。" },
+        "baseline": { "type": ["string", "null"], "description": "与谁比较。" },
+        "comparison": { "type": ["string", "null"], "description": "指标如何变化。" },
+        "scope": { "$ref": "#/$defs/scope" },
+        "verification_status": { "$ref": "#/$defs/verificationStatus" },
+        "soft_locator": {
+          "type": ["string", "null"],
+          "description": "软定位（页码 + 图表号等）。**不得**写入 evidence。"
+        }
+      }
+    },
+
+    "assumption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "explicit", "evidence"],
+      "properties": {
+        "text": { "type": "string" },
+        "explicit": {
+          "type": "boolean",
+          "description": "true=作者明说；false=读者推断（隐含假设）。隐含假设必须标 false。"
+        },
+        "evidence": { "$ref": "#/$defs/evidenceList" },
+        "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "scope": { "$ref": "#/$defs/scope" },
+        "used_by_claims": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "依赖此假设的 claim 端点，如 #1。"
+        },
+        "source_type": { "$ref": "#/$defs/sourceType" },
+        "verification_status": { "$ref": "#/$defs/verificationStatus" }
+      }
+    },
+
+    "limitationItem": {
+      "description": "局限条目。兼容旧版字符串，也支持升级后的对象形式（PLAN1009 §5.4）。",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text"],
+          "properties": {
+            "text": { "type": "string" },
+            "reason": { "type": ["string", "null"] },
+            "evidence": { "$ref": "#/$defs/evidenceList" },
+            "status": { "$ref": "#/$defs/verificationStatus" }
+          }
+        }
+      ]
+    },
+
+    "claimRelation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["src_claim", "dst_claim", "kind", "polarity", "evidence"],
+      "properties": {
+        "src_claim": { "type": "string", "description": "如 #1（本论文第 1 个主张）。" },
+        "dst_claim": { "type": "string", "description": "如 arxiv:1901.07621#2，对端须已落库。" },
+        "kind": { "type": "string", "enum": ["support", "contradict", "extend", "use"] },
+        "polarity": { "type": "string", "enum": ["positive", "negative", "neutral"] },
+        "evidence": { "$ref": "#/$defs/evidenceList" },
+        "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+      }
+    },
+
+    "methodEvolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from_paper", "to_paper", "source_type", "verification_status"],
+      "properties": {
+        "from_paper": { "type": "string" },
+        "to_paper": { "type": "string" },
+        "inherited": { "type": "array", "items": { "type": "string" } },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["component", "before", "after"],
+            "properties": {
+              "component": { "type": "string" },
+              "before": { "type": "string" },
+              "after": { "type": "string" },
+              "reason": { "type": "string" }
+            }
+          }
+        },
+        "new_assumptions": { "type": "array", "items": { "type": "string" } },
+        "removed_assumptions": { "type": "array", "items": { "type": "string" } },
+        "evidence": { "$ref": "#/$defs/evidenceList" },
+        "source_type": { "$ref": "#/$defs/sourceType" },
+        "verification_status": { "$ref": "#/$defs/verificationStatus" }
+      }
+    },
+
+    "evidenceQuote": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["page", "quote", "interpretation", "evidence_role", "review_status"],
+      "properties": {
+        "page": { "type": "integer", "minimum": 1 },
+        "quote": { "type": "string", "minLength": 1 },
+        "interpretation": { "type": "string", "minLength": 1 },
+        "evidence_role": { "type": "string", "enum": ["supports", "bounds", "contradicts", "context"] },
+        "span_id": { "type": ["string", "null"] },
+        "visual_checked": { "type": "boolean" },
+        "review_status": { "type": "string", "enum": ["pending", "accepted", "rejected"] },
+        "review_reason": { "type": ["string", "null"] }
+      }
+    },
+    "qualityAssessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dimension", "verdict", "reason", "impact"],
+      "properties": {
+        "dimension": {
+          "type": "string",
+          "enum": ["design", "measurement", "comparison", "statistics", "robustness", "reproducibility", "external_validity"]
+        },
+        "verdict": { "type": "string", "enum": ["pass", "concern", "fail", "unknown", "not_applicable"] },
+        "reason": { "type": "string", "minLength": 1 },
+        "impact": { "type": "string", "minLength": 1 },
+        "evidence": { "$ref": "#/$defs/evidenceList" }
+      }
+    },
+    "criticalAppraisal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["falsifiable_claim", "claim_type", "evidence_chain", "quality_assessments", "alternative_explanations", "scope_boundaries", "missing_information", "reproduction_details", "overall_verdict"],
+      "properties": {
+        "falsifiable_claim": { "type": "string", "minLength": 1 },
+        "claim_type": { "type": "string", "enum": ["descriptive", "causal", "mechanistic", "theoretical", "engineering", "normative"] },
+        "evidence_chain": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["step", "statement", "evidence", "status"],
+            "properties": {
+              "step": { "type": "integer", "minimum": 1 },
+              "statement": { "type": "string", "minLength": 1 },
+              "evidence": { "$ref": "#/$defs/evidenceList" },
+              "status": { "type": "string", "enum": ["supported", "bounded", "contradicted", "untested"] }
+            }
+          }
+        },
+        "quality_assessments": { "type": "array", "items": { "$ref": "#/$defs/qualityAssessment" } },
+        "alternative_explanations": { "type": "array", "items": { "type": "string" } },
+        "scope_boundaries": { "type": "array", "items": { "type": "string" } },
+        "missing_information": { "type": "array", "items": { "type": "string" } },
+        "reproduction_details": { "type": "array", "items": { "type": "string" } },
+        "overall_verdict": { "type": "string", "enum": ["accept", "accept_with_limits", "insufficient", "reject"] },
+        "verdict_reason": { "type": ["string", "null"] }
+      }
+    },
+    "understandingQuality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "checks", "unresolved_questions"],
+      "description": "理解质量状态，与 reading_depth（覆盖进度）分离。third_pass 不能自动推出 checked。",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["not_assessed", "partial", "checked", "needs_revision"]
+        },
+        "checks": {
+          "type": "array",
+          "description": "将来的验证记录位置。当前不设计如何产生 checks。",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "result"],
+            "properties": {
+              "kind": { "type": "string" },
+              "result": { "type": "string" },
+              "evidence": { "$ref": "#/$defs/evidenceList" },
+              "notes": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "unresolved_questions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "理解中尚未证实的问题。"
+        }
+      }
+    },
+
+    "completeness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["absent_fields"],
+      "description": "解释已定义字段为什么为空（PLAN1009 §5.6、§6.7）。空不等于没有。",
+      "properties": {
+        "absent_fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["field", "reason"],
+            "properties": {
+              "field": { "type": "string" },
+              "reason": {
+                "type": "string",
+                "enum": ["not_extracted", "not_found", "not_applicable", "unknown", "not_checked"]
+              },
+              "notes": { "type": ["string", "null"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

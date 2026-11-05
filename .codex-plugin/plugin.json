@@ -1,0 +1,17 @@
+{
+  "name": "researchos",
+  "version": "1.0.0",
+  "description": "Codex 原生多智能体科研工作流与实时研究工作台。",
+  "author": {"name": "ResearchOS"},
+  "requires_local_executor": true,
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "ResearchOS",
+    "shortDescription": "检索、阅读、审阅与研究产物，同一工作台。",
+    "longDescription": "由 Codex Lead 协调固定科研智能体；确定性引擎保存状态、契约与证据，工作台只读展示运行进度和产物。",
+    "developerName": "ResearchOS",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "打开 ResearchOS 工作台，恢复最近的研究运行。"
+  }
+}

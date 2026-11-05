@@ -1,0 +1,22 @@
+{
+  "papers": [
+    {
+      "paper_id": "arxiv:2401.00001",
+      "title": "Demo Paper A",
+      "abstract": "A demo corpus entry. All numbers are fictional.",
+      "year": 2020,
+      "full_text": {
+        "pdf_path": "inputs/demo/corpus/pdfs/demo-0.pdf"
+      }
+    },
+    {
+      "paper_id": "arxiv:2401.00002",
+      "title": "Demo Paper B",
+      "abstract": "A second demo corpus entry. All numbers are fictional.",
+      "year": 2021,
+      "full_text": {
+        "pdf_path": "inputs/demo/corpus/pdfs/demo-1.pdf"
+      }
+    }
+  ]
+}

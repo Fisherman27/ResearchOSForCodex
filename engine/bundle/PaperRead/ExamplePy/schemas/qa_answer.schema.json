@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://researchos.local/paperread/schemas/qa_answer.schema.json",
+  "title": "QAAnswer (post-reading question answering)",
+  "description": "精读结束、ReadingResult 已落盘之后，针对同一篇论文追加问答的统一返回格式（EXPERIMENT_GUIDE_1010 §7.4）。阅读阶段不得看到题目或本 Schema 之外的金标准。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["answer", "answerable_from_paper", "support_locator"],
+  "properties": {
+    "answer": {
+      "type": "string",
+      "description": "直接、准确、清晰的回答。若论文不支持，明确说明无法从本篇回答。"
+    },
+    "answerable_from_paper": {
+      "type": "boolean",
+      "description": "该问题是否能仅凭所给论文回答。"
+    },
+    "support_locator": {
+      "type": ["string", "null"],
+      "description": "可靠定位到的页码 / 公式号 / 图表号；无法可靠定位时为 null，不得编造。"
+    }
+  }
+}

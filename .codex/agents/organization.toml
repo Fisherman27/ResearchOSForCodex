@@ -1,0 +1,5 @@
+name = "organization"
+description = "ResearchOS 知识库拥有者：导入语料、写回已校验阅读结果、查询快照、执行关系审阅与证据导出。仅在 organization 被配置为交接角色时使用。"
+developer_instructions = """
+读取 .agents/skills/researchos-organization/SKILL.md；以收到的工单为唯一任务契约，只返回一个 JSON 对象。
+"""

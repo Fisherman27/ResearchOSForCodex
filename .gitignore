@@ -1,0 +1,98 @@
+# ResearchOS runtime state (never portable; may contain local paths and sessions)
+/runs/
+/work/
+/engine/runs/
+/engine/work/
+/engine/engine/
+
+# User-supplied local inputs may contain private papers; keep only the shipped demo
+/inputs/*
+!/inputs/demo/
+!/inputs/demo/**
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+Keys.txt
+*.local.json
+*.local.toml
+
+# Python caches, environments and test output
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.pyright/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+junit.xml
+test-results/
+.tox/
+.nox/
+.venv/
+venv/
+env/
+
+# Development-only verification suites (the published package is end-user facing)
+/tests/
+**/tests/
+**/test/
+**/probe-plugin/
+**/runtime-probe/
+
+# Generated databases, logs, locks and process files
+*.sqlite
+*.sqlite3
+*.db
+*.log
+*.pid
+registry.json.lock
+.engine-active.json
+*.tmp
+*.bak
+
+# Generated research/search artifacts wherever a bundled tool is run
+out/
+output/
+outputs/
+acceptance/[0-9]*/
+artifacts/
+results/
+viz/
+visualization/
+downloads/
+parsed/
+
+# Development history and one-off integration notes; not user documentation
+/docs/wutong-integration.md
+/docs/codex-optimization.md
+/docs/PLAN*.md
+/docs/plan-*.md
+/docs/gpt-*.md
+/docs/*checking*.md
+/docs/*tuning*.md
+/docs/*migration-notes*.md
+/docs/*integration-notes*.md
+
+# Local packaging/build output
+build/
+dist/
+*.egg-info/
+*.whl.tmp
+MANIFEST
+
+# Editors and operating systems
+.DS_Store
+._*
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
